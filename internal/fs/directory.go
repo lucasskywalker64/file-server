@@ -51,7 +51,7 @@ func caseInsensitiveLess(a, b string) bool {
 // prepends a parent directory ("..") entry if applicable,
 // and sorts directories before files (alphabetically).
 func ReadDirectory(dirPath string) ([]Entry, string, error) {
-	if dirPath == "" || dirPath == DrivesVirtualPath {
+	if dirPath == DrivesVirtualPath {
 		if runtime.GOOS != "windows" {
 			dirPath = "/"
 		} else {

@@ -3,6 +3,7 @@ package fs
 import (
 	"os"
 	"path/filepath"
+	"runtime"
 	"testing"
 )
 
@@ -61,6 +62,10 @@ func TestReadDirectory(t *testing.T) {
 }
 
 func TestReadDirectory_DrivesVirtualPath(t *testing.T) {
+	if runtime.GOOS != "windows" {
+		t.Skip("skipping Windows virtual drives test on non-Windows platform")
+	}
+
 	entries, path, err := ReadDirectory(DrivesVirtualPath)
 	if err != nil {
 		t.Fatalf("ReadDirectory(DrivesVirtualPath) failed: %v", err)
@@ -81,6 +86,41 @@ func TestReadDirectory_DrivesVirtualPath(t *testing.T) {
 	}
 	if !foundC {
 		t.Errorf("expected 'C:\\' drive in entries, got %v", entries)
+	}
+}
+
+func TestReadDirectory_UnixRoot(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		t.Skip("skipping Unix root test on Windows")
+	}
+
+	entries, path, err := ReadDirectory("/")
+	if err != nil {
+		t.Fatalf("ReadDirectory(/) failed: %v", err)
+	}
+	if path != "/" {
+		t.Errorf("expected path '/', got '%s'", path)
+	}
+	if len(entries) == 0 {
+		t.Errorf("expected entries in root '/'")
+	}
+
+	for _, e := range entries {
+		if e.IsParent || e.Name == ".." {
+			t.Errorf("root '/' should not have parent entry '..'")
+		}
+	}
+}
+
+func TestGetLogicalDrives(t *testing.T) {
+	drives := GetLogicalDrives()
+	if len(drives) == 0 {
+		t.Fatalf("expected at least one drive")
+	}
+	if runtime.GOOS != "windows" {
+		if len(drives) != 1 || drives[0] != "/" {
+			t.Errorf("expected ['/'] on non-Windows, got %v", drives)
+		}
 	}
 }
 

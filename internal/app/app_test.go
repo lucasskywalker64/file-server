@@ -3,6 +3,7 @@ package app
 import (
 	"os"
 	"path/filepath"
+	"runtime"
 	"testing"
 
 	"file-server/internal/fs"
@@ -90,6 +91,10 @@ func TestAppModel_QuitKeyInServingState(t *testing.T) {
 }
 
 func TestAppModel_NavigateToDriveRoot(t *testing.T) {
+	if runtime.GOOS != "windows" {
+		t.Skip("skipping Windows drive root navigation test on non-Windows platform")
+	}
+
 	model, err := NewModel("C:\\", 19091)
 	if err != nil {
 		t.Fatalf("NewModel at C:\\ failed: %v", err)
@@ -115,6 +120,25 @@ func TestAppModel_NavigateToDriveRoot(t *testing.T) {
 	// Should contain drive list
 	if len(m.Entries) == 0 {
 		t.Errorf("expected drive entries in 'This PC'")
+	}
+}
+
+func TestAppModel_NavigateToUnixRoot(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		t.Skip("skipping Unix root navigation test on Windows")
+	}
+
+	model, err := NewModel("/", 19091)
+	if err != nil {
+		t.Fatalf("NewModel at / failed: %v", err)
+	}
+
+	if model.Cwd != "/" {
+		t.Errorf("expected Cwd to be '/', got '%s'", model.Cwd)
+	}
+
+	if len(model.Entries) > 0 && model.Entries[0].IsParent {
+		t.Errorf("expected no '..' parent entry at Unix root '/'")
 	}
 }
 
