@@ -22,3 +22,7 @@ go.work
 .idea/
 *.swp
 *.swo
+
+# Build outputs
+dist/
+bin/
